@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KAAL — Time is Armour</title>
+<!-- js-cookie CDN -->
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@3/dist/js.cookie.min.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --black:#0a0a0a;--white:#f5f5f0;--accent:#c8ff00;--gray:#1a1a1a;--mid:#2a2a2a;--muted:#888;--error:#ff4444;--success:#00c851;
+  }
+  html{scroll-behavior:smooth;}
+  body{background:var(--black);color:var(--white);font-family:'Helvetica Neue',Arial,sans-serif;overflow-x:hidden;opacity:0;transition:opacity 0.8s ease-out;}
+  body.loaded{opacity:1;}
+
+  /* NAV */
+  nav{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;justify-content:space-between;align-items:center;padding:1.5rem 3rem;background:transparent;backdrop-filter:blur(0px);border-bottom:1px solid transparent;transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1);}
+  nav.shrunk{padding:0.8rem 3rem;background:rgba(10,10,10,0.8);backdrop-filter:blur(15px);border-bottom:1px solid #222;}
+  .logo{font-size:1.8rem;font-weight:900;letter-spacing:0.3em;color:var(--accent);cursor:pointer;}
+  .nav-links{display:flex;gap:2.5rem;list-style:none;}
+  .nav-links a{color:var(--muted);text-decoration:none;font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;transition:color 0.2s;}
+  .nav-links a:hover{color:var(--accent);}
+  .nav-right{display:flex;align-items:center;gap:1.5rem;}
+  .cart-btn{background:transparent;border:1px solid #333;color:var(--white);padding:0.5rem 1rem;cursor:pointer;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;position:relative;transition:all 0.3s;}
+  .cart-btn:hover{border-color:var(--accent);background:rgba(200,255,0,0.05);}
+  .cart-count{position:absolute;top:-6px;right:-6px;background:var(--accent);color:var(--black);width:18px;height:18px;border-radius:50%;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;transition:transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
+  .cart-count.bump{transform:scale(1.4);}
+
+  /* HERO */
+  #hero{height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:4rem 3rem;background:#0a0a0a;position:relative;overflow:hidden;border-bottom:1px solid #222;}
+  .hero-img-bg{position:absolute;inset:0;background-image:url('images/cat-1/67b282ab3995d52c0d1d7f445c89d0d4.jpg');background-size:cover;background-position:center;opacity:0.4;z-index:0;transition:transform 0.1s linear;}
+  .hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom, transparent 0%, var(--black) 95%);z-index:1;}
+  .hero-content{position:relative;z-index:2;}
+  .hero-bg{position:absolute;inset:0;display:grid;grid-template-columns:repeat(8,1fr);opacity:0.04;z-index:1;pointer-events:none;}
+  .hero-bg div{border-right:1px solid var(--white);}
+  .hero-eyebrow{font-size:0.7rem;letter-spacing:0.4em;text-transform:uppercase;color:var(--accent);margin-bottom:1.5rem;}
+  .hero-title{font-size:clamp(5rem,15vw,12rem);font-weight:900;line-height:0.9;letter-spacing:-0.02em;color:var(--white);margin-bottom:2rem;}
+  .hero-title span{display:block;color:var(--accent);}
+  .hero-sub{font-size:1rem;color:var(--muted);max-width:360px;line-height:1.6;margin-bottom:2.5rem;letter-spacing:0.02em;}
+  .hero-ctas{display:flex;gap:1rem;flex-wrap:wrap;}
+  .btn-primary{background:var(--accent);color:var(--black);border:none;padding:1rem 2.5rem;font-size:0.8rem;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;transition:all 0.3s;}
+  .btn-primary:hover{opacity:0.85;transform:translateY(-2px);box-shadow:0 10px 20px rgba(200,255,0,0.2);}
+  .btn-outline{background:transparent;color:var(--white);border:1px solid #444;padding:1rem 2.5rem;font-size:0.8rem;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;transition:all 0.3s;}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .hero-scroll{position:absolute;right:3rem;bottom:3rem;writing-mode:vertical-rl;font-size:0.65rem;letter-spacing:0.3em;color:var(--muted);text-transform:uppercase;}
+
+  /* MARQUEE */
+  .marquee-wrap{overflow:hidden;background:var(--accent);padding:0.65rem 0;position:relative;z-index:5;}
+  .marquee-track{display:flex;gap:2rem;animation:scroll 18s linear infinite;white-space:nowrap;}
+  .marquee-item{font-size:0.7rem;font-weight:900;letter-spacing:0.3em;text-transform:uppercase;color:var(--black);flex-shrink:0;}
+  @keyframes scroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+  /* SECTION COMMONS */
+  section{padding:8rem 3rem;}
+  .section-label{font-size:0.65rem;letter-spacing:0.4em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem;}
+  .section-title{font-size:clamp(2rem,5vw,3.5rem);font-weight:900;letter-spacing:-0.02em;margin-bottom:3rem;}
+
+  /* COLLECTION */
+  #collection{background:var(--black);}
+  .collection-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem;}
+  .product-card{background:var(--mid);position:relative;cursor:pointer;overflow:hidden;transition:all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);border:1px solid #222;}
+  .product-card:hover{transform:scale(1.02);box-shadow:0 20px 40px rgba(0,0,0,0.4);border-color:#444;}
+  .product-img-wrap{width:100%;aspect-ratio:3/4;overflow:hidden;background:#111;position:relative;}
+  .product-img{width:100%;height:100%;object-fit:cover;transition:transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);}
+  .product-card:hover .product-img{transform:scale(1.1);}
+  .product-info{padding:1.5rem;background:var(--black);}
+  .product-name{font-size:0.9rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem;}
+  .product-type{font-size:0.75rem;color:var(--muted);letter-spacing:0.08em;margin-bottom:1.2rem;}
+  .product-footer{display:flex;justify-content:space-between;align-items:center;}
+  .product-price{font-size:1rem;font-weight:700;color:var(--accent);}
+  .add-btn{background:transparent;border:1px solid #333;color:var(--white);padding:0.6rem 1.2rem;font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+  .add-btn:hover{background:var(--accent);color:var(--black);border-color:var(--accent);}
+  .product-badge{position:absolute;top:1rem;left:1rem;background:var(--accent);color:var(--black);font-size:0.6rem;font-weight:900;letter-spacing:0.15em;padding:0.25rem 0.5rem;text-transform:uppercase;z-index:2;}
+
+  /* SKELETON */
+  .skeleton{background:linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);background-size:200% 100%;animation:skeleton-shimmer 1.5s infinite;}
+  @keyframes skeleton-shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+  /* ANIMATE ON SCROLL */
+  .animate-on-scroll{opacity:0;transform:translateY(30px);transition:all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);}
+  .animate-on-scroll.visible{opacity:1;transform:translateY(0);}
+
+  /* LOOKBOOK */
+  #lookbook{background:#0d0d0d;}
+  .look-grid{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:auto auto;gap:1px;background:#1a1a1a;}
+  .look-item{background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:280px;position:relative;overflow:hidden;}
+  .look-item img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.6;transition:all 0.5s;}
+  .look-item:hover img{transform:scale(1.05);opacity:0.8;}
+  .look-item:first-child{grid-row:1/3;min-height:560px;}
+  .look-label{font-size:0.65rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--white);position:relative;z-index:2;background:rgba(0,0,0,0.5);padding:0.5rem 1rem;}
+  .look-overlay{position:absolute;inset:0;background:rgba(10,10,10,0.8);display:flex;flex-direction:column;justify-content:flex-end;padding:2rem;opacity:0;transition:opacity 0.4s;z-index:3;}
+  .look-item:hover .look-overlay{opacity:1;}
+  .look-name{font-size:1rem;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.5rem;color:var(--accent);}
+  .look-desc{font-size:0.8rem;color:var(--white);line-height:1.4;}
+
+  /* STORY */
+  #story{background:var(--black);display:grid;grid-template-columns:1fr 1fr;gap:6rem;align-items:center;}
+  .story-visual{position:relative;aspect-ratio:1;max-width:480px;overflow:hidden;border:1px solid #222;}
+  .story-visual img{width:100%;height:100%;object-fit:cover;opacity:0.7;}
+  .story-body{color:var(--muted);font-size:1rem;line-height:1.9;margin-bottom:2.5rem;}
+  .story-stats{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:3rem;border-top:1px solid #222;padding-top:2rem;}
+  .stat-num{font-size:2.5rem;font-weight:900;color:var(--accent);}
+  .stat-label{font-size:0.75rem;color:var(--muted);letter-spacing:0.15em;text-transform:uppercase;}
+
+  /* CART DRAWER */
+  .cart-drawer{position:fixed;top:0;right:-450px;width:100%;max-width:450px;height:100vh;background:var(--black);z-index:2000;transition:right 0.5s cubic-bezier(0.77, 0, 0.175, 1);display:flex;flex-direction:column;border-left:1px solid #222;box-shadow:-20px 0 60px rgba(0,0,0,0.5);}
+  .cart-drawer.open{right:0;}
+  .cart-header{padding:2rem;border-bottom:1px solid #222;display:flex;justify-content:space-between;align-items:center;}
+  .cart-header h2{font-size:1.2rem;letter-spacing:0.2em;text-transform:uppercase;}
+  .close-cart{background:transparent;border:none;color:var(--white);font-size:1.5rem;cursor:pointer;transition:color 0.2s;}
+  .close-cart:hover{color:var(--accent);}
+  .cart-items{flex:1;overflow-y:auto;padding:2rem;}
+  .cart-item{display:flex;gap:1.5rem;margin-bottom:2rem;align-items:center;animation:fadeIn 0.4s ease-out;}
+  .cart-item-img{width:80px;aspect-ratio:3/4;object-fit:cover;background:#111;border:1px solid #222;}
+  .cart-item-info{flex:1;}
+  .cart-item-name{font-size:0.85rem;font-weight:700;text-transform:uppercase;margin-bottom:0.3rem;}
+  .cart-item-price{font-size:0.8rem;color:var(--accent);}
+  .cart-item-controls{display:flex;align-items:center;gap:1rem;margin-top:0.8rem;}
+  .qty-btn{background:transparent;border:1px solid #333;color:var(--white);width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.8rem;transition:all 0.2s;}
+  .qty-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .cart-item-qty{font-size:0.85rem;}
+  .remove-item{background:transparent;border:none;color:#555;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;margin-left:auto;transition:color 0.2s;}
+  .remove-item:hover{color:var(--error);}
+  .cart-footer{padding:2rem;border-top:1px solid #222;background:#0d0d0d;}
+  .cart-summary-line{display:flex;justify-content:space-between;margin-bottom:1rem;font-size:0.9rem;}
+  .cart-total{font-size:1.2rem;font-weight:900;color:var(--accent);margin-top:0.5rem;border-top:1px solid #333;padding-top:1rem;}
+  .checkout-btn{width:100%;background:var(--accent);color:var(--black);border:none;padding:1.2rem;font-size:0.9rem;font-weight:900;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;margin-top:1.5rem;transition:all 0.3s;}
+  .checkout-btn:hover{opacity:0.9;transform:translateY(-2px);}
+  .cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1999;opacity:0;pointer-events:none;transition:opacity 0.4s;}
+  .cart-overlay.show{opacity:1;pointer-events:auto;}
+
+  /* CHECKOUT MODAL */
+  .checkout-modal{position:fixed;inset:0;z-index:2100;display:none;align-items:center;justify-content:center;padding:2rem;background:rgba(0,0,0,0.9);overflow-y:auto;}
+  .checkout-modal.open{display:flex;}
+  .checkout-container{background:var(--black);width:100%;max-width:800px;border:1px solid #222;display:grid;grid-template-columns:1.2fr 1fr;animation:slideUp 0.5s cubic-bezier(0.23, 1, 0.32, 1);}
+  .checkout-form-side{padding:3rem;}
+  .checkout-summary-side{background:#0d0d0d;padding:3rem;border-left:1px solid #222;}
+  .form-group{margin-bottom:1.5rem;position:relative;}
+  .form-label{display:block;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.2em;color:var(--muted);margin-bottom:0.5rem;}
+  .form-input{width:100%;background:transparent;border:1px solid #333;padding:1rem;color:var(--white);font-size:0.9rem;transition:all 0.3s;}
+  .form-input:focus{border-color:var(--accent);outline:none;background:rgba(200,255,0,0.02);}
+  .form-input.invalid{border-color:var(--error);animation:shake 0.4s;}
+  .address-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+  .payment-options{margin-top:2rem;}
+  .payment-option{display:flex;align-items:center;gap:1rem;padding:1rem;border:1px solid #222;margin-bottom:1rem;cursor:pointer;transition:all 0.2s;}
+  .payment-option:hover{border-color:var(--accent);}
+  .payment-option.selected{border-color:var(--accent);background:rgba(200,255,0,0.05);}
+  .payment-option input{display:none;}
+  .promo-wrap{display:flex;gap:0.5rem;margin-bottom:2rem;}
+  .promo-input{flex:1;background:transparent;border:1px solid #333;padding:0.8rem;color:var(--white);text-transform:uppercase;letter-spacing:0.1em;}
+  .promo-btn{background:var(--mid);color:var(--white);border:none;padding:0 1.5rem;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;cursor:pointer;transition:all 0.2s;}
+  .promo-btn:hover{background:var(--accent);color:var(--black);}
+  .discount-tag{display:inline-block;background:var(--success);color:var(--black);font-size:0.65rem;font-weight:900;padding:0.3rem 0.6rem;text-transform:uppercase;margin-top:0.5rem;}
+
+  /* TOASTS */
+  .toast-container{position:fixed;bottom:2rem;right:2rem;z-index:3000;display:flex;flex-direction:column;gap:1rem;}
+  .toast{background:var(--accent);color:var(--black);padding:1.2rem 2.5rem;font-size:0.85rem;font-weight:900;letter-spacing:0.15em;text-transform:uppercase;box-shadow:0 10px 30px rgba(0,0,0,0.3);animation:toastIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);position:relative;overflow:hidden;}
+  .toast.error{background:var(--error);color:var(--white);}
+  .toast.info{background:var(--white);color:var(--black);}
+  .toast::after{content:'';position:absolute;bottom:0;left:0;height:4px;background:rgba(0,0,0,0.2);width:100%;animation:toastProgress 3s linear forwards;}
+  @keyframes toastIn{from{opacity:0;transform:translateX(50px);}to{opacity:1;transform:translateX(0);}}
+  @keyframes toastProgress{from{width:100%;}to{width:0%;}}
+
+  /* FLYING CART ANIMATION */
+  .flying-item{position:fixed;z-index:9999;width:50px;height:70px;object-fit:cover;pointer-events:none;transition:all 0.8s cubic-bezier(0.19, 1, 0.22, 1);}
+
+  /* ANIMATIONS */
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  @keyframes slideUp{from{opacity:0;transform:translateY(40px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+
+  /* CONFIRMATION MODAL */
+  .confirm-modal{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:3000;display:none;align-items:center;justify-content:center;text-align:center;}
+  .confirm-modal.open{display:flex;}
+  .confirm-content{max-width:500px;padding:4rem;}
+  .confirm-icon{font-size:5rem;color:var(--accent);margin-bottom:2rem;}
+  .confirm-title{font-size:2.5rem;font-weight:900;margin-bottom:1.5rem;letter-spacing:-0.02em;}
+  .confirm-msg{color:var(--muted);line-height:1.6;margin-bottom:3rem;}
+
+  /* NEWSLETTER */
+  #newsletter{background:#0d0d0d;text-align:center;padding:8rem 3rem;}
+  #newsletter .section-title{max-width:600px;margin:0 auto 0.5rem;}
+  .nl-sub{color:var(--muted);font-size:1rem;margin-bottom:2.5rem;}
+  .nl-form{display:flex;gap:0;max-width:480px;margin:0 auto;border:1px solid #333;transition:all 0.3s;}
+  .nl-form:focus-within{border-color:var(--accent);}
+  .nl-input{flex:1;background:transparent;border:none;padding:1.2rem 1.5rem;color:var(--white);font-size:0.9rem;outline:none;}
+  .nl-input::placeholder{color:var(--muted);}
+  .nl-submit{background:var(--accent);color:var(--black);border:none;padding:1.2rem 2rem;font-size:0.8rem;font-weight:900;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;transition:all 0.3s;white-space:nowrap;}
+  .nl-submit:hover{opacity:0.85;letter-spacing:0.2em;}
+
+  /* FOOTER */
+  footer{background:#080808;border-top:1px solid #1a1a1a;padding:5rem 3rem 3rem;}
+  .footer-inner{display:flex;justify-content:space-between;align-items:flex-start;gap:3rem;flex-wrap:wrap;}
+  .footer-logo{font-size:2.5rem;font-weight:900;letter-spacing:0.3em;color:var(--accent);margin-bottom:0.5rem;}
+  .footer-tagline{font-size:0.75rem;color:var(--muted);letter-spacing:0.2em;text-transform:uppercase;}
+  .footer-col h4{font-size:0.7rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted);margin-bottom:1.5rem;}
+  .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:0.8rem;}
+  .footer-col a{color:#666;text-decoration:none;font-size:0.85rem;transition:color 0.2s;letter-spacing:0.05em;}
+  .footer-col a:hover{color:var(--accent);}
+  .footer-bottom{margin-top:5rem;border-top:1px solid #1a1a1a;padding-top:2rem;display:flex;justify-content:space-between;font-size:0.75rem;color:#444;letter-spacing:0.1em;flex-wrap:wrap;gap:1rem;}
+
+  @media (max-width:768px){
+    nav{padding:0.8rem 1.5rem;}
+    nav.shrunk{padding:0.5rem 1.5rem;}
+    .nav-links{display:none;} /* Hide links on mobile for simplicity, or could use a burger menu */
+    .logo{font-size:1.4rem;}
+    
+    #hero{padding:2rem 1.5rem;}
+    .hero-title{font-size:clamp(3.5rem, 12vw, 6rem);}
+    .hero-sub{font-size:0.9rem;max-width:100%;}
+    
+    section{padding:4rem 1.5rem;}
+    .section-title{font-size:2.2rem;margin-bottom:2rem;}
+    
+    .collection-grid{grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:1rem;}
+    .product-info{padding:1rem;}
+    .product-name{font-size:0.75rem;}
+    .product-price{font-size:0.85rem;}
+    .add-btn{padding:0.4rem 0.8rem;font-size:0.6rem;}
+    
+    .look-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto;}
+    .look-item:first-child{grid-row:span 1;grid-column:span 2;min-height:300px;}
+    .look-item{min-height:200px;}
+    
+    #story{gap:3rem;}
+    .story-stats{grid-template-columns:1fr 1fr;gap:1.5rem;}
+    
+    .footer-inner{flex-direction:column;gap:2.5rem;}
+    .footer-bottom{flex-direction:column;align-items:flex-start;gap:1rem;}
+    
+    .checkout-container{max-width:100vw;margin:0;border:none;padding:1.5rem;}
+    .address-grid{grid-template-columns:1fr;}
+    .checkout-modal{padding:0;}
+  }
+</style>
+</head>
+<body id="top" style="overflow-x:hidden;">
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="logo" onclick="window.scrollTo(0,0)">KAAL</div>
+  <ul class="nav-links">
+    <li><a href="#collection">Shop</a></li>
+    <li><a href="#lookbook">Lookbook</a></li>
+    <li><a href="#story">Our Story</a></li>
+    <li><a href="#newsletter">Contact</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="cart-btn" onclick="toggleCart(true)">
+      Cart <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-img-bg" id="heroImgBg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-bg"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow animate-on-scroll"></div>
+    <h1 class="hero-title animate-on-scroll">KAAL<span>काल</span></h1>
+    <p class="hero-sub animate-on-scroll">Time is the only currency that matters. Wear it like armour.</p>
+    <div class="hero-ctas animate-on-scroll">
+      <button class="btn-primary" onclick="document.getElementById('collection').scrollIntoView({behavior:'smooth'})">Shop the Drop</button>
+      <button class="btn-outline" onclick="document.getElementById('lookbook').scrollIntoView({behavior:'smooth'})">View Lookbook</button>
+    </div>
+  </div>
+  <div class="hero-scroll">Scroll Down</div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track" id="marquee"></div>
+</div>
+
+<!-- COLLECTION -->
+<section id="collection">
+  <div class="section-label animate-on-scroll">SS 2026 Drop</div>
+  <h2 class="section-title animate-on-scroll">The Collection</h2>
+  <div class="collection-grid" id="productGrid">
+    <!-- Skeleton placeholders -->
+    <div class="product-card skeleton" style="height:500px"></div>
+    <div class="product-card skeleton" style="height:500px"></div>
+    <div class="product-card skeleton" style="height:500px"></div>
+  </div>
+</section>
+
+<!-- LOOKBOOK -->
+<section id="lookbook">
+  <div class="section-label animate-on-scroll">Editorial</div>
+  <h2 class="section-title animate-on-scroll">Lookbook</h2>
+  <div class="look-grid animate-on-scroll">
+    <div class="look-item">
+      <img src="images/cat-1/il_1140xN.2533034363_388k.avif" alt="The Centurion Look" loading="lazy">
+      <div class="look-label">The Centurion Look</div>
+      <div class="look-overlay">
+        <div class="look-name">The Centurion</div>
+        <div class="look-desc">Oversized heavy hoodie + grey tech cargos</div>
+      </div>
+    </div>
+    <div class="look-item">
+      <img src="images/cat-1/7f39a7506ea6a1723ad28c90f7fc846a.jpg" alt="Shadow Runner" loading="lazy">
+      <div class="look-label">Shadow Runner</div>
+      <div class="look-overlay">
+        <div class="look-name">Shadow Runner</div>
+        <div class="look-desc">RESTLESS graphic tee — Midnight Black</div>
+      </div>
+    </div>
+    <div class="look-item">
+      <img src="images/cat-1/d86d402d2da2b541578abf6d4dca115c.jpg" alt="Urban Ghost" loading="lazy">
+      <div class="look-label">Urban Ghost</div>
+      <div class="look-overlay">
+        <div class="look-name">Urban Ghost</div>
+        <div class="look-desc">Back-print dragon hoodie + utility kit</div>
+      </div>
+    </div>
+    <div class="look-item">
+      <img src="images/cat-1/8e45f5297270ca34c25be343175d7845.jpg" alt="Static" loading="lazy">
+      <div class="look-label">Static</div>
+      <div class="look-overlay">
+        <div class="look-name">Static</div>
+        <div class="look-desc">David Mettle oversized tee</div>
+      </div>
+    </div>
+    <div class="look-item">
+      <img src="images/cat-1/b7c3df92ffec57b80b58b39857f5f2f2.jpg" alt="The Riot" loading="lazy">
+      <div class="look-label">The Riot</div>
+      <div class="look-overlay">
+        <div class="look-name">The Riot</div>
+        <div class="look-desc">Streetwise classic vintage tee</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STORY -->
+<section id="story">
+  <div class="story-visual animate-on-scroll">
+    <img src="images/cat-1/67b282ab3995d52c0d1d7f445c89d0d4.jpg" alt="KAAL Founder">
+  </div>
+  <div class="story-text">
+    <div class="section-label animate-on-scroll">Who We Are</div>
+    <h2 class="section-title animate-on-scroll">Born from the streets.<br/>Built for eternity.</h2>
+    <p class="story-body animate-on-scroll">KAAL — Hindi for <em>Time</em> — was born in the chaos of the city. We believe every moment is a statement. Every thread, a testament. Our clothes don't follow trends. They outlast them.<br><br>Made for men who move with purpose. Who wear silence like a weapon and presence like a crown.</p>
+    <button class="btn-outline animate-on-scroll">Read Our Manifesto</button>
+    <div class="story-stats animate-on-scroll">
+      <div><div class="stat-num">2026</div><div class="stat-label">Founded</div></div>
+      <div><div class="stat-num">100%</div><div class="stat-label">Original Designs</div></div>
+      <div><div class="stat-num">∞</div><div class="stat-label">Timeless Pieces</div></div>
+      <div><div class="stat-num">India</div><div class="stat-label">Crafted Here</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section id="newsletter">
+  <div class="section-label animate-on-scroll">Stay in the Loop</div>
+  <h2 class="section-title animate-on-scroll">First to the Drop.</h2>
+  <p class="nl-sub animate-on-scroll">Get early access to new collections, exclusive drops and KAAL events.</p>
+  <div class="nl-form animate-on-scroll">
+    <input class="nl-input" type="email" placeholder="Enter your email" id="emailInput"/>
+    <button class="nl-submit" onclick="subscribe()">Subscribe</button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-logo">KAAL</div>
+      <div class="footer-tagline">Time is your armour.</div>
+    </div>
+    <div class="footer-col">
+      <h4>Shop</h4>
+      <ul>
+        <li><a href="#">New Arrivals</a></li>
+        <li><a href="#">Tops</a></li>
+        <li><a href="#">Bottoms</a></li>
+        <li><a href="#">Outerwear</a></li>
+        <li><a href="#">Accessories</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Info</h4>
+      <ul>
+        <li><a href="#">Our Story</a></li>
+        <li><a href="#">Lookbook</a></li>
+        <li><a href="#">Sizing Guide</a></li>
+        <li><a href="#">Returns</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Follow</h4>
+      <ul>
+        <li><a href="#">Instagram</a></li>
+        <li><a href="#">YouTube</a></li>
+        <li><a href="#">Pinterest</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 KAAL. All rights reserved.</span>
+    <span>Privacy Policy &nbsp;·&nbsp; Terms of Service</span>
+  </div>
+</footer>
+
+<!-- CART DRAWER -->
+<div class="cart-overlay" id="cartOverlay" onclick="toggleCart(false)"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-header">
+    <h2>Your Cart</h2>
+    <button class="close-cart" onclick="toggleCart(false)">&times;</button>
+  </div>
+  <div class="cart-items" id="cartItemsList">
+    <!-- Items dynamically injected here -->
+  </div>
+  <div class="cart-footer">
+    <div class="cart-summary-line">
+      <span>Subtotal</span>
+      <span id="cartSubtotal">₹0</span>
+    </div>
+    <div class="cart-summary-line cart-total">
+      <span>Total</span>
+      <span id="cartTotal">₹0</span>
+    </div>
+    <button class="checkout-btn" onclick="openCheckout()">Proceed to Checkout</button>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="checkout-modal" id="checkoutModal">
+  <div class="checkout-container">
+    <div class="checkout-form-side">
+      <div class="section-label">Checkout</div>
+      <h3 style="margin-bottom:2rem;text-transform:uppercase;letter-spacing:0.1em;">Shipping Details</h3>
+      
+      <form id="checkoutForm" name="checkout" netlify data-netlify="true">
+        <input type="hidden" name="form-name" value="checkout" />
+        
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" name="name" class="form-input" required placeholder="John Doe">
+        </div>
+        
+        <div class="address-grid">
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" name="email" class="form-input" required placeholder="john@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" name="phone" class="form-input" required placeholder="+91 98765 43210">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Street Address</label>
+          <input type="text" name="street" class="form-input" required placeholder="Apartment, suite, etc.">
+        </div>
+
+        <div class="address-grid">
+          <div class="form-group">
+            <label class="form-label">City</label>
+            <input type="text" name="city" class="form-input" required placeholder="Mumbai">
+          </div>
+          <div class="form-group">
+            <label class="form-label">State</label>
+            <input type="text" name="state" class="form-input" required placeholder="Maharashtra">
+          </div>
+        </div>
+
+        <div class="address-grid">
+          <div class="form-group">
+            <label class="form-label">PIN Code</label>
+            <input type="text" name="pincode" class="form-input" required placeholder="400001">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Country</label>
+            <input type="text" name="country" class="form-input" required placeholder="India">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Order Notes (Optional)</label>
+          <textarea name="notes" class="form-input" style="height:80px;resize:none;"></textarea>
+        </div>
+
+        <h3 style="margin-top:2rem;margin-bottom:1.5rem;text-transform:uppercase;letter-spacing:0.1em;font-size:0.9rem;">Payment Method</h3>
+        <div class="payment-options">
+          <label class="payment-option selected" id="optRazorpay">
+            <input type="radio" name="payment" value="razorpay" checked>
+            <span>Razorpay (Online)</span>
+          </label>
+          <label class="payment-option" id="optCOD">
+            <input type="radio" name="payment" value="cod">
+            <span>Cash on Delivery</span>
+          </label>
+        </div>
+
+        <button type="button" class="btn-primary" style="width:100%;" onclick="validateAndSubmit()">Complete Order</button>
+        <button type="button" class="btn-outline" style="width:100%;margin-top:1rem;" onclick="closeCheckout()">Cancel</button>
+      </form>
+    </div>
+
+    <div class="checkout-summary-side">
+      <h3 style="margin-bottom:2rem;text-transform:uppercase;letter-spacing:0.1em;font-size:0.9rem;">Order Summary</h3>
+      <div id="checkoutSummaryItems">
+        <!-- Summary items here -->
+      </div>
+      
+      <div style="margin-top:2rem;padding-top:2rem;border-top:1px solid #222;">
+        <label class="form-label">Promo Code</label>
+        <div class="promo-wrap">
+          <input type="text" id="promoInput" class="promo-input" placeholder="Enter Code">
+          <button type="button" class="promo-btn" onclick="applyPromo()">Apply</button>
+        </div>
+        <div id="promoFeedback"></div>
+      </div>
+
+      <div style="margin-top:2rem;">
+        <div class="cart-summary-line">
+          <span>Subtotal</span>
+          <span id="summarySubtotal">₹0</span>
+        </div>
+        <div class="cart-summary-line" id="discountLine" style="display:none;color:var(--success);">
+          <span>Discount</span>
+          <span id="summaryDiscount">-₹0</span>
+        </div>
+        <div class="cart-summary-line" style="font-size:1.2rem;font-weight:900;color:var(--accent);margin-top:1rem;border-top:1px solid #333;padding-top:1rem;">
+          <span>Total</span>
+          <span id="summaryTotal">₹0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRMATION MODAL -->
+<div class="confirm-modal" id="confirmModal">
+  <div class="confirm-content">
+    <div class="confirm-icon">✓</div>
+    <h2 class="confirm-title">Order Received</h2>
+    <p class="confirm-msg">Your order has been placed successfully! Our team will contact you shortly to confirm your delivery details. Welcome to the KAAL collective.</p>
+    <button class="btn-primary" onclick="window.location.reload()">Return Home</button>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  /* === CONFIG & CONSTANTS === */
+  const DISCOUNT_CODES = {
+    "SAVE10": { type: "percent", value: 10 },
+    "FLAT50": { type: "flat", value: 50 },
+    "FREESHIP": { type: "shipping", value: 0 },
+    "GIFT100": { type: "flat", value: 100 }
+  };
+
+  const PRODUCTS_DATA = [
+    {id:1, name:'Shadow Hoodie', type:'Heavyweight Hoodie', price:2799, img:'images/cat-1/b0e37e5688e63ec962ee859f688e54ed.jpg', badge:'New'},
+    {id:2, name:'Kaal Tee Vol.1', type:'Oversized Graphic Tee', price:999, img:'images/cat-1/b7c3df92ffec57b80b58b39857f5f2f2.jpg', badge:''},
+    {id:3, name:'Cargo Runner', type:'Wide-Leg Cargo Pants', price:3499, img:'images/cat-1/c80e994e76c064ce812f63e1a0b73f31.jpg', badge:'Limited'},
+    {id:4, name:'Urban Vest', type:'Tactical Hooded Vest', price:2199, img:'images/cat-1/d86d402d2da2b541578abf6d4dca115c.jpg', badge:'New'},
+    {id:5, name:'Time Kills All', type:'Graphic Long-Sleeve', price:1499, img:'images/cat-1/8e45f5297270ca34c25be343175d7845.jpg', badge:''},
+    {id:6, name:'Block Jogger', type:'Relaxed Fit Joggers', price:1999, img:'images/cat-1/54d0e7a308b6422b1fd9fb3bd3a71b17.jpg', badge:''},
+  ];
+
+  let cart = [];
+  let appliedDiscount = null;
+
+  /* === CORE INITIALIZATION === */
+  window.addEventListener('DOMContentLoaded', () => {
+    document.body.classList.add('loaded');
+    loadCartFromCookies();
+    initProducts();
+    initMarquee();
+    initScrollAnimations();
+    initHeroParallax();
+    initStickyHeader();
+  });
+
+  /* === PRODUCTS & UI === */
+  function initProducts() {
+    const grid = document.getElementById('productGrid');
+    grid.innerHTML = '';
+    PRODUCTS_DATA.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'product-card animate-on-scroll';
+      card.innerHTML = `
+        ${p.badge ? `<div class="product-badge">${p.badge}</div>` : ''}
+        <div class="product-img-wrap">
+          <img src="${p.img}" alt="${p.name}" class="product-img" loading="lazy">
+        </div>
+        <div class="product-info">
+          <div class="product-name">${p.name}</div>
+          <div class="product-type">${p.type}</div>
+          <div class="product-footer">
+            <div class="product-price">₹${p.price.toLocaleString()}</div>
+            <button class="add-btn" onclick="addToCart(${p.id}, event)">+ Add</button>
+          </div>
+        </div>`;
+      grid.appendChild(card);
+    });
+    // Trigger scroll animation check
+    setTimeout(() => {
+      window.dispatchEvent(new Event('scroll'));
+    }, 100);
+  }
+
+  function initMarquee() {
+    const items = ['KAAL','काल','Time is Power','New Drop SS26','Streetwear','Born in India','Urban Armour'];
+    const m = document.getElementById('marquee');
+    [...items,...items].forEach(t => {
+      const d = document.createElement('div');
+      d.className = 'marquee-item';
+      d.textContent = items.indexOf(t) % 2 === 0 ? t : '· ' + t;
+      m.appendChild(d);
+    });
+  }
+
+  /* === CART LOGIC === */
+  function addToCart(productId, event) {
+    const product = PRODUCTS_DATA.find(p => p.id === productId);
+    const existing = cart.find(item => item.id === productId);
+
+    if (existing) {
+      existing.qty++;
+    } else {
+      cart.push({ ...product, qty: 1 });
+    }
+
+    if (event) flyToCart(event.target);
+    updateCartUI();
+    saveCartToCookies();
+    showToast(`${product.name} added to armoury`);
+  }
+
+  function removeFromCart(productId) {
+    cart = cart.filter(item => item.id !== productId);
+    updateCartUI();
+    saveCartToCookies();
+  }
+
+  function updateQty(productId, delta) {
+    const item = cart.find(i => i.id === productId);
+    if (item) {
+      item.qty += delta;
+      if (item.qty <= 0) removeFromCart(productId);
+      else {
+        updateCartUI();
+        saveCartToCookies();
+      }
+    }
+  }
+
+  function updateCartUI() {
+    const list = document.getElementById('cartItemsList');
+    const summaryList = document.getElementById('checkoutSummaryItems');
+    list.innerHTML = '';
+    if (summaryList) summaryList.innerHTML = '';
+
+    let subtotal = 0;
+    let count = 0;
+
+    cart.forEach(item => {
+      subtotal += item.price * item.qty;
+      count += item.qty;
+
+      // Drawer Item
+      const itemEl = document.createElement('div');
+      itemEl.className = 'cart-item';
+      itemEl.innerHTML = `
+        <img src="${item.img}" class="cart-item-img">
+        <div class="cart-item-info">
+          <div class="cart-item-name">${item.name}</div>
+          <div class="cart-item-price">₹${item.price.toLocaleString()}</div>
+          <div class="cart-item-controls">
+            <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
+            <span class="cart-item-qty">${item.qty}</span>
+            <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
+          </div>
+        </div>
+        <button class="remove-item" onclick="removeFromCart(${item.id})">Remove</button>
+      `;
+      list.appendChild(itemEl);
+
+      // Checkout Summary Item
+      if (summaryList) {
+        const sumEl = document.createElement('div');
+        sumEl.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:1rem;font-size:0.85rem;';
+        sumEl.innerHTML = `<span>${item.name} x ${item.qty}</span><span>₹${(item.price * item.qty).toLocaleString()}</span>`;
+        summaryList.appendChild(sumEl);
+      }
+    });
+
+    // Badge
+    const badge = document.getElementById('cartCount');
+    badge.textContent = count;
+    badge.classList.remove('bump');
+    void badge.offsetWidth; // trigger reflow
+    if (count > 0) badge.classList.add('bump');
+
+    // Totals
+    document.getElementById('cartSubtotal').textContent = `₹${subtotal.toLocaleString()}`;
+    calculateTotals(subtotal);
+  }
+
+  function calculateTotals(subtotal) {
+    let discountVal = 0;
+    if (appliedDiscount) {
+      if (appliedDiscount.type === 'percent') discountVal = subtotal * (appliedDiscount.value / 100);
+      else if (appliedDiscount.type === 'flat') discountVal = appliedDiscount.value;
+      else if (appliedDiscount.type === 'shipping') discountVal = 0; // assuming free ship is flat 0 shipping
+    }
+
+    const total = Math.max(0, subtotal - discountVal);
+    
+    // Update all total elements
+    ['cartTotal', 'summarySubtotal', 'summaryTotal'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = `₹${(id === 'summarySubtotal' ? subtotal : total).toLocaleString()}`;
+    });
+
+    const discLine = document.getElementById('discountLine');
+    if (discLine) {
+      if (discountVal > 0) {
+        discLine.style.display = 'flex';
+        document.getElementById('summaryDiscount').textContent = `-₹${discountVal.toLocaleString()}`;
+      } else {
+        discLine.style.display = 'none';
+      }
+    }
+  }
+
+  /* === COOKIES === */
+  function saveCartToCookies() {
+    Cookies.set('shopCart', JSON.stringify({
+      items: cart,
+      discount: appliedDiscount
+    }), { expires: 7 });
+  }
+
+  function loadCartFromCookies() {
+    const saved = Cookies.get('shopCart');
+    if (saved) {
+      const data = JSON.parse(saved);
+      cart = data.items || [];
+      appliedDiscount = data.discount || null;
+      updateCartUI();
+    }
+  }
+
+  /* === CHECKOUT & PROMO === */
+  function toggleCart(show) {
+    document.getElementById('cartDrawer').classList.toggle('open', show);
+    document.getElementById('cartOverlay').classList.toggle('show', show);
+  }
+
+  function openCheckout() {
+    if (cart.length === 0) return showToast('Add items to cart first', 'error');
+    toggleCart(false);
+    document.getElementById('checkoutModal').classList.add('open');
+    updateCartUI();
+  }
+
+  function closeCheckout() {
+    document.getElementById('checkoutModal').classList.remove('open');
+  }
+
+  function applyPromo() {
+    const input = document.getElementById('promoInput');
+    const code = input.value.trim().toUpperCase();
+    const feedback = document.getElementById('promoFeedback');
+
+    if (DISCOUNT_CODES[code]) {
+      appliedDiscount = DISCOUNT_CODES[code];
+      feedback.innerHTML = `<div class="discount-tag">Code Applied: ${code}</div>`;
+      showToast(`Discount ${code} applied!`);
+      updateCartUI();
+      saveCartToCookies();
+    } else {
+      feedback.innerHTML = `<div style="color:var(--error);font-size:0.7rem;margin-top:0.5rem;text-transform:uppercase;">Invalid Promo Code</div>`;
+      input.classList.add('invalid');
+      setTimeout(() => input.classList.remove('invalid'), 400);
+      showToast('Invalid promo code', 'error');
+    }
+  }
+
+  function validateAndSubmit() {
+    const form = document.getElementById('checkoutForm');
+    const inputs = form.querySelectorAll('input[required]');
+    let valid = true;
+
+    inputs.forEach(input => {
+      if (!input.value) {
+        input.classList.add('invalid');
+        valid = false;
+      } else {
+        input.classList.remove('invalid');
+      }
+    });
+
+    if (!valid) {
+      showToast('Please fill all required fields', 'error');
+      return;
+    }
+
+    const payment = form.querySelector('input[name="payment"]:checked').value;
+    if (payment === 'cod') {
+      // Netlify form submission handled silently or via fetch
+      const formData = new FormData(form);
+      fetch("/", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(formData).toString(),
+      }).catch(err => console.error(err));
+
+      document.getElementById('confirmModal').classList.add('open');
+      Cookies.remove('shopCart');
+    } else {
+      showToast('Razorpay integration coming soon');
+    }
+  }
+
+  // Payment option toggles
+  document.getElementById('optRazorpay').onclick = () => {
+    document.getElementById('optRazorpay').classList.add('selected');
+    document.getElementById('optCOD').classList.remove('selected');
+    document.querySelector('input[value="razorpay"]').checked = true;
+  };
+  document.getElementById('optCOD').onclick = () => {
+    document.getElementById('optCOD').classList.add('selected');
+    document.getElementById('optRazorpay').classList.remove('selected');
+    document.querySelector('input[value="cod"]').checked = true;
+  };
+
+  /* === VISUAL EFFECTS === */
+  function showToast(msg, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(20px)';
+      setTimeout(() => toast.remove(), 400);
+    }, 3000);
+  }
+
+  function flyToCart(btn) {
+    const cartBtn = document.querySelector('.cart-btn');
+    const btnRect = btn.getBoundingClientRect();
+    const cartRect = cartBtn.getBoundingClientRect();
+
+    const fly = document.createElement('div');
+    fly.className = 'flying-item';
+    fly.style.cssText = `
+      left: ${btnRect.left}px;
+      top: ${btnRect.top}px;
+      background: var(--accent);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+    `;
+    document.body.appendChild(fly);
+
+    requestAnimationFrame(() => {
+      fly.style.left = (cartRect.left + 10) + 'px';
+      fly.style.top = (cartRect.top + 10) + 'px';
+      fly.style.transform = 'scale(0.1)';
+      fly.style.opacity = '0';
+    });
+
+    setTimeout(() => fly.remove(), 800);
+  }
+
+  function initScrollAnimations() {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+  }
+
+  function initHeroParallax() {
+    const heroBg = document.getElementById('heroImgBg');
+    window.addEventListener('scroll', () => {
+      const scroll = window.pageYOffset;
+      heroBg.style.transform = `translateY(${scroll * 0.4}px) scale(${1 + scroll * 0.0005})`;
+    });
+  }
+
+  function initStickyHeader() {
+    const nav = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) nav.classList.add('shrunk');
+      else nav.classList.remove('shrunk');
+    });
+  }
+
+  function subscribe() {
+    const v = document.getElementById('emailInput').value;
+    if (v && v.includes('@')) {
+      showToast('You\'re on the list. Welcome to KAAL.');
+      document.getElementById('emailInput').value = '';
+    } else {
+      showToast('Enter a valid email.', 'error');
+    }
+  }
+</script>
+</body>
+</html>
+emailInput').value = '';
+    } else {
+      showToast('Enter a valid email.', 'error');
+    }
+  }
+</script>
+</body>
+</html>
